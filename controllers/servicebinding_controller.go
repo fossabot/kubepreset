@@ -38,10 +38,17 @@ type ServiceBindingReconciler struct {
 // +kubebuilder:rbac:groups=app.kubepreset.dev,resources=servicebindings/status,verbs=get;update;patch
 
 func (r *ServiceBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	_ = r.Log.WithValues("servicebinding", req.NamespacedName)
+	ctx := context.Background()
+	log := r.Log.WithValues("servicebinding", req.NamespacedName)
 
-	// your logic here
+	var sb appv1alpha1.ServiceBinding
+	if err := r.Get(ctx, req.NamespacedName, &sb); err != nil {
+		log.Error(err, "unable to fetch ServiceBinding")
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
 	return ctrl.Result{}, nil
 }
